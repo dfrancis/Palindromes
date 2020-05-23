@@ -22,7 +22,9 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,11 +54,69 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isPalindrome(char[] text, int start, int end) {
-        return true;
+        boolean retval = true;
+        for (int idx = start; idx <= start + (end - 1 - start)/2; ++idx) {
+            if (text[idx] != text[end - 1 - (idx - start)]) {
+                retval = false;
+            }
+        }
+        return retval;
+    }
+
+    private PalindromeGroup greedyBreakIntoPalindromes(char[] text, int start, int end) {
+        PalindromeGroup group = null;
+        int startIdx = start;
+        while (startIdx < end) {
+            for (int endIdx = end; endIdx > startIdx; --endIdx) {
+                if (isPalindrome(text, startIdx, endIdx)) {
+                    if (group == null) {
+                        group = new PalindromeGroup(text, startIdx, endIdx);
+                    } else {
+                        group.append(new PalindromeGroup(text, startIdx, endIdx));
+                    }
+                    startIdx = endIdx;
+                    break;
+                }
+            }
+        }
+        return group;
+    }
+
+    private PalindromeGroup recursiveBreakIntoPalindromes(char[] text, int start, int end) {
+        PalindromeGroup group = null;
+
+        if (start >= end) {
+            return null;
+        }
+
+        if (start == end - 1) {
+            return new PalindromeGroup(text, start, end);
+        }
+
+        PalindromeGroup currGroup = null;
+        int smallestGroupSize = 0;
+        for (int endIdx = end; endIdx > start; --endIdx) {
+            if (isPalindrome(text, start, endIdx)) {
+                currGroup = new PalindromeGroup(text, start, endIdx);
+                currGroup.append(recursiveBreakIntoPalindromes(text, endIdx, end));
+
+                if (group == null) {
+                    group = currGroup;
+                    smallestGroupSize = currGroup.length();
+                } else if (currGroup.length() < smallestGroupSize) {
+                    group = currGroup;
+                    smallestGroupSize = currGroup.length();
+                }
+            }
+        }
+
+        return group;
     }
 
     private PalindromeGroup breakIntoPalindromes(char[] text, int start, int end) {
         PalindromeGroup bestGroup = null;
+        // bestGroup = greedyBreakIntoPalindromes(text, start, end);
+        bestGroup = recursiveBreakIntoPalindromes(text, start, end);
         return bestGroup;
     }
 }
