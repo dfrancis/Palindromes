@@ -113,10 +113,50 @@ public class MainActivity extends AppCompatActivity {
         return group;
     }
 
+    private PalindromeGroup dynamicProgBreakIntoPalindromes(char[] text, int start, int end) {
+        PalindromeGroup group = null;
+
+        if (start >= end) {
+            return null;
+        }
+
+        if (start == end - 1) {
+            return new PalindromeGroup(text, start, end);
+        }
+
+        Range range = Range.create(start, end);
+        if (findings.containsKey(range)) {
+            return findings.get(range);
+        }
+
+        PalindromeGroup currGroup = null;
+        int smallestGroupSize = 0;
+        for (int endIdx = end; endIdx > start; --endIdx) {
+            if (isPalindrome(text, start, endIdx)) {
+                currGroup = new PalindromeGroup(text, start, endIdx);
+                currGroup.append(dynamicProgBreakIntoPalindromes(text, endIdx, end));
+
+                if (group == null) {
+                    group = currGroup;
+                    smallestGroupSize = currGroup.length();
+                } else if (currGroup.length() < smallestGroupSize) {
+                    group = currGroup;
+                    smallestGroupSize = currGroup.length();
+                }
+            }
+        }
+
+        findings.put(range, group);
+
+        return group;
+    }
+
     private PalindromeGroup breakIntoPalindromes(char[] text, int start, int end) {
         PalindromeGroup bestGroup = null;
         // bestGroup = greedyBreakIntoPalindromes(text, start, end);
-        bestGroup = recursiveBreakIntoPalindromes(text, start, end);
+        // bestGroup = recursiveBreakIntoPalindromes(text, start, end);
+        findings.clear();
+        bestGroup = dynamicProgBreakIntoPalindromes(text, start, end);
         return bestGroup;
     }
 }
